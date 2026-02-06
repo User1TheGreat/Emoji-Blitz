@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Emoji Blitz</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="usernameModal" class="modal">
+      <div class="modal-content">
+        <h2>Welcome to Emoji Blitz</h2>
+        <p>Enter your username (3-15 characters):</p>
+        <input type="text" id="usernameInput" maxlength="15" minlength="3" />
+        <button onclick="saveUsername()">Start Game</button>
+      </div>
+    </div>
+
+    <div class="hud">
+      <div class="hud-item">Score: <span id="score">0</span></div>
+      <div class="hud-item">Level: <span id="level">1</span></div>
+      <div class="hud-item">Secrets: <span id="secretsFound">0</span>/20</div>
+    </div>
+
+    <button id="menuToggle" class="toggle-btn">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
+
+    <div id="sidebar" class="sidebar closed">
+      <div class="sidebar-header" id="sidebarTitle">OMEGA MENU</div>
+
+      <button id="leaderboardBtn" class="side-btn">
+        <span class="icon">🏆</span> <span class="label">Leaderboard</span>
+      </button>
+      <button id="secretsBtn" class="side-btn">
+        <span class="icon">🔍</span> <span class="label">Secrets Archive</span>
+      </button>
+      <button id="accountBtn" class="side-btn">
+        <span class="icon">👤</span> <span class="label">Account Settings</span>
+      </button>
+      <button id="infoBtn" class="side-btn">
+        <span class="icon">❓</span> <span class="label">Instructions</span>
+      </button>
+      <button id="settingsBtn" class="side-btn">
+        <span class="icon">⚙️</span> <span class="label">Settings</span>
+      </button>
+
+      <div id="infoPanel" class="side-panel hidden">
+        <div class="panel-header"><h3>How to Play</h3></div>
+        <div class="panel-content">
+          <p>
+            Click elements to destroy them! Discover hidden secrets by
+            interacting with the UI...
+          </p>
+        </div>
+      </div>
+
+      <div id="secretsPanel" class="side-panel hidden">
+        <div class="panel-header"><h3>Secrets & Clues</h3></div>
+        <div class="panel-content" id="secretsList"></div>
+      </div>
+
+      <div id="accountPanel" class="side-panel hidden">
+        <div class="panel-header"><h3>Account Settings</h3></div>
+        <div class="panel-content">
+          <p>Current User: <strong id="currentUserDisplay"></strong></p>
+          <input
+            type="text"
+            id="changeUsernameInput"
+            placeholder="New username"
+            maxlength="15"
+            minlength="3"
+          />
+          <button onclick="changeUsername()" class="panic-btn">
+            Update Name
+          </button>
+        </div>
+      </div>
+
+      <div id="settingsPanel" class="side-panel hidden">
+        <div class="panel-header"><h3>System Settings</h3></div>
+        <div class="panel-content">
+          <label
+            >Elements:
+            <input type="number" id="maxElements" value="40" min="10" max="150"
+          /></label>
+          <label
+            >Speed (ms):
+            <input
+              type="number"
+              id="spawnSpeed"
+              value="1000"
+              min="50"
+              max="5000"
+          /></label>
+          <button id="panicButton" class="panic-btn">PANIC BUTTON</button>
+        </div>
+      </div>
+    </div>
+
+    <button id="unlockOmega" class="panic-btn hidden omega-btn">
+      OMEGA PANEL
+    </button>
+
+    <div id="leaderboardPanel" class="omega-panel hidden">
+      <div class="panel-header"><h3>HALL OF FAME</h3></div>
+      <div class="panel-content">
+        <ol id="omegaLeaderboardList">
+          <li>Loading...</li>
+        </ol>
+        <button onclick="closePanel('leaderboardPanel')" class="close-btn">
+          ×
+        </button>
+      </div>
+    </div>
+
+    <div id="canvasWrapper">
+      <canvas id="gameCanvas"></canvas>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
