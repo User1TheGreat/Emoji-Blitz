@@ -1,0 +1,309 @@
+:root {
+  --bg-color: #0a0a0c;
+  --accent-color: #8e44ad;
+  --text-color: #ffffff;
+  --font-main: "Segoe UI", Roboto, Helvetica, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-color);
+  font-family: var(--font-main);
+  color: var(--text-color);
+  cursor: crosshair;
+}
+
+/* --- PREMIUM HUD --- */
+.hud {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+  pointer-events: none;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.hud-item {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 12px 20px;
+  border-radius: 16px;
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+}
+.hud-item span {
+  color: var(--accent-color);
+  font-weight: bold;
+  font-size: 16px;
+  text-shadow: 0 0 10px rgba(142, 68, 173, 0.5);
+}
+
+/* --- Toggle Button --- */
+.toggle-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10002;
+  padding: 15px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.toggle-btn:hover {
+  background: rgba(142, 68, 173, 0.3);
+  border-color: var(--accent-color);
+}
+.bar {
+  width: 20px;
+  height: 2px;
+  background: white;
+  transition: all 0.3s;
+}
+
+/* --- Polished Sidebar --- */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100vh;
+  background: rgba(10, 10, 12, 0.95);
+  backdrop-filter: blur(30px);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  z-index: 10001;
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  flex-direction: column;
+  padding-top: 100px;
+  gap: 10px;
+}
+.sidebar.closed {
+  transform: translateX(100%);
+}
+
+.sidebar-header {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 30px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* --- Stand Out Buttons --- */
+.side-btn {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 18px 30px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #aaa;
+  font-size: 14px;
+  font-weight: 300;
+  border-radius: 15px;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  width: 85%;
+  margin: 0 auto;
+  text-align: left;
+}
+.side-btn:hover {
+  color: white;
+  background: rgba(142, 68, 173, 0.1);
+  border-color: var(--accent-color);
+  box-shadow: 0 0 15px rgba(142, 68, 173, 0.3);
+  padding-left: 35px;
+}
+.side-btn .icon {
+  font-size: 18px;
+  transition: all 0.3s;
+}
+.side-btn:hover .icon {
+  transform: scale(1.2);
+}
+
+/* --- Panels inside sidebar --- */
+.side-panel {
+  width: 85%;
+  margin: 10px auto;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+}
+.hidden {
+  display: none !important;
+}
+.panel-header {
+  padding: 10px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-weight: bold;
+  font-size: 12px;
+  letter-spacing: 2px;
+}
+.panel-content {
+  padding: 15px;
+  color: #aaa;
+  font-size: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* --- Inputs in Panels --- */
+label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 5px;
+}
+input[type="text"],
+input[type="number"] {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #333;
+  color: white;
+  padding: 4px;
+  border-radius: 5px;
+  width: 50px;
+}
+input[type="text"] {
+  width: 80%;
+}
+
+/* --- Panic Button --- */
+.panic-btn {
+  background: linear-gradient(45deg, #ff416c, #ff4b2b);
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-weight: bold;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* --- OMEGA Panel --- */
+.omega-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  width: 450px;
+  background: rgba(10, 10, 12, 0.95);
+  border: 1px solid var(--accent-color);
+  border-radius: 25px;
+  backdrop-filter: blur(40px);
+  z-index: 20000;
+  box-shadow: 0 10px 50px rgba(142, 68, 173, 0.2);
+  transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+  opacity: 0;
+  pointer-events: none;
+}
+.omega-panel.active {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+#omegaLeaderboardList {
+  color: white;
+  font-size: 18px;
+  font-weight: 300;
+  padding: 20px 40px;
+  list-style-type: decimal;
+}
+#omegaLeaderboardList li {
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: transparent;
+  border: none;
+  color: #555;
+  font-size: 24px;
+  cursor: pointer;
+}
+.close-btn:hover {
+  color: white;
+}
+
+/* --- Game Canvas & Blur --- */
+#canvasWrapper {
+  transition: filter 0.3s ease;
+}
+.blurred {
+  filter: blur(5px);
+  pointer-events: none; /* Prevents clicking while blurred */
+}
+#gameCanvas {
+  display: block;
+  transition: width 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.omega-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10002;
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  z-index: 30000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  background: rgba(10, 10, 12, 0.95);
+  padding: 30px;
+  border: 1px solid var(--accent-color);
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(142, 68, 173, 0.5);
+}
+.modal input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #333;
+  color: white;
+  padding: 8px;
+  border-radius: 5px;
+  width: 80%;
+  margin-bottom: 15px;
+}
+.modal button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
