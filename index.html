@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Emoji Blitz</title>
+    <title>Emoji Blitz: v1.1</title>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -19,7 +19,7 @@
     <div class="hud">
       <div class="hud-item">Score: <span id="score">0</span></div>
       <div class="hud-item">Level: <span id="level">1</span></div>
-      <div class="hud-item">Secrets: <span id="secretsFound">0</span>/20</div>
+      <div class="hud-item">Secrets: <span id="secretsFound">0</span>/25</div>
     </div>
 
     <button id="menuToggle" class="toggle-btn">
@@ -34,8 +34,17 @@
       <button id="leaderboardBtn" class="side-btn">
         <span class="icon">🏆</span> <span class="label">Leaderboard</span>
       </button>
+      <button id="upgradesBtn" class="side-btn">
+        <span class="icon">🚀</span> <span class="label">Upgrades</span>
+      </button>
+      <button id="rarityBtn" class="side-btn">
+        <span class="icon">📊</span> <span class="label">Rarity Index</span>
+      </button>
       <button id="secretsBtn" class="side-btn">
         <span class="icon">🔍</span> <span class="label">Secrets Archive</span>
+      </button>
+      <button id="logBtn" class="side-btn">
+        <span class="icon">📜</span> <span class="label">Log</span>
       </button>
       <button id="accountBtn" class="side-btn">
         <span class="icon">👤</span> <span class="label">Account Settings</span>
@@ -46,6 +55,44 @@
       <button id="settingsBtn" class="side-btn">
         <span class="icon">⚙️</span> <span class="label">Settings</span>
       </button>
+
+      <div id="upgradesPanel" class="side-panel hidden">
+        <div class="panel-header"><h3>Store</h3></div>
+        <div class="panel-content">
+          <button id="autoClickerBtn" class="upgrade-btn">
+            Buy Auto Clicker<br />
+            Cost: <span id="autoClickerCost">50</span><br />
+            Speed: <span id="autoClickerSpeed">10.0</span>s
+          </button>
+          <button
+            id="prestigeBtn"
+            class="panic-btn hidden"
+            style="margin-top: 15px"
+          >
+            PRESTIGE (Reset + Boost)
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="rarityPanel"
+        class="side-panel hidden"
+        style="height: 400px; display: flex; flex-direction: column"
+      >
+        <div class="panel-header"><h3>Rarity Index</h3></div>
+        <div class="tab-container">
+          <button class="tab-btn active" onclick="openTab(event, 'rarityList')">
+            Rarities
+          </button>
+          <button class="tab-btn" onclick="openTab(event, 'chanceList')">
+            Chances
+          </button>
+        </div>
+        <div class="panel-content" style="flex-grow: 1; overflow-y: auto">
+          <div id="rarityList" class="tab-content active"></div>
+          <div id="chanceList" class="tab-content hidden"></div>
+        </div>
+      </div>
 
       <div id="infoPanel" class="side-panel hidden">
         <div class="panel-header"><h3>How to Play</h3></div>
@@ -60,6 +107,20 @@
       <div id="secretsPanel" class="side-panel hidden">
         <div class="panel-header"><h3>Secrets & Clues</h3></div>
         <div class="panel-content" id="secretsList"></div>
+      </div>
+
+      <div id="logPanel" class="side-panel hidden">
+        <div class="panel-header"><h3>Update Log</h3></div>
+        <div class="panel-content" style="font-size: 11px; line-height: 1.4">
+          <p>
+            <strong>v1.1</strong>: Added Rarity Index panel. Added 10 new
+            emojis. Fixed various bugs. Added 5 new secrets, good luck finding
+            them! Added the log menu (Which you are reading right now!). added
+            new emojis and a new rarity type. Have fun playing and discovering
+            secrets!
+          </p>
+          <p><strong>v1.0</strong>: Initial Release.</p>
+        </div>
       </div>
 
       <div id="accountPanel" class="side-panel hidden">
@@ -100,7 +161,11 @@
       </div>
     </div>
 
-    <button id="unlockOmega" class="panic-btn hidden omega-btn">
+    <button
+      id="unlockOmega"
+      class="panic-btn hidden omega-btn"
+      onclick="togglePanelDisplay('omegaPanel')"
+    >
       OMEGA PANEL
     </button>
 
@@ -112,6 +177,110 @@
         </ol>
         <button onclick="closePanel('leaderboardPanel')" class="close-btn">
           ×
+        </button>
+      </div>
+    </div>
+
+    <div id="omegaPanel" class="omega-panel hidden">
+      <div class="panel-header"><h3>OMEGA TOOLS</h3></div>
+      <div class="panel-content">
+        <button
+          onclick="megaExplosion()"
+          class="upgrade-btn"
+          style="background: #2c3e50; margin-bottom: 10px"
+        >
+          MEGA EXPLOSION
+        </button>
+        <button
+          onclick="spawnMaxElements()"
+          class="upgrade-btn"
+          style="background: #2c3e50; margin-bottom: 10px"
+        >
+          FLOOD SCREEN
+        </button>
+        <button
+          onclick="closePanel('omegaPanel')"
+          class="upgrade-btn"
+          style="margin-top: 10px; background: #333"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <div id="adminPanel" class="omega-panel hidden">
+      <div class="panel-header"><h3>ADMIN CONSOLE</h3></div>
+      <div class="panel-content">
+        <div style="margin-bottom: 10px; text-align: center">
+          <label>Score:</label>
+          <input
+            type="number"
+            id="adminScoreInput"
+            placeholder="Amt"
+            style="width: 70px; padding: 5px"
+          />
+          <button
+            onclick="adminSetScore()"
+            class="upgrade-btn"
+            style="width: auto; padding: 5px 10px; margin-left: 5px"
+          >
+            Set
+          </button>
+        </div>
+        <div style="margin-bottom: 10px; text-align: center">
+          <label>Level:</label>
+          <input
+            type="number"
+            id="adminLevelInput"
+            placeholder="Lvl"
+            style="width: 70px; padding: 5px"
+          />
+          <button
+            onclick="adminSetLevel()"
+            class="upgrade-btn"
+            style="width: auto; padding: 5px 10px; margin-left: 5px"
+          >
+            Set
+          </button>
+        </div>
+        <div style="margin-bottom: 10px; text-align: center">
+          <label>Auto Clicker Lvl:</label>
+          <input
+            type="number"
+            id="adminAutoClickerInput"
+            placeholder="Lvl"
+            style="width: 70px; padding: 5px"
+          />
+          <button
+            onclick="adminSetAutoClicker()"
+            class="upgrade-btn"
+            style="width: auto; padding: 5px 10px; margin-left: 5px"
+          >
+            Set
+          </button>
+        </div>
+        <div style="margin-bottom: 10px; text-align: center">
+          <label>Prestige Lvl:</label>
+          <input
+            type="number"
+            id="adminPrestigeInput"
+            placeholder="Lvl"
+            style="width: 70px; padding: 5px"
+          />
+          <button
+            onclick="adminSetPrestige()"
+            class="upgrade-btn"
+            style="width: auto; padding: 5px 10px; margin-left: 5px"
+          >
+            Set
+          </button>
+        </div>
+        <button
+          onclick="closePanel('adminPanel')"
+          class="upgrade-btn"
+          style="margin-top: 10px; background: #333"
+        >
+          Close
         </button>
       </div>
     </div>
