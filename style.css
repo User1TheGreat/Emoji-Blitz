@@ -3,6 +3,12 @@
   --accent-color: #8e44ad;
   --text-color: #ffffff;
   --font-main: "Segoe UI", Roboto, Helvetica, sans-serif;
+  /* Rarity Colors */
+  --rarity-common: #aaa;
+  --rarity-rare: #3498db;
+  --rarity-epic: #9b59b6;
+  --rarity-legendary: #f1c40f;
+  --rarity-mythic: #e74c3c;
 }
 
 body {
@@ -90,8 +96,8 @@ body {
   transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
   display: flex;
   flex-direction: column;
-  padding-top: 100px;
-  gap: 10px;
+  padding-top: 80px;
+  gap: 5px;
 }
 .sidebar.closed {
   transform: translateX(100%);
@@ -102,7 +108,7 @@ body {
   letter-spacing: 4px;
   color: #666;
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 10px;
   font-weight: bold;
   cursor: pointer;
 }
@@ -112,7 +118,7 @@ body {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 18px 30px;
+  padding: 12px 30px;
   cursor: pointer;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -164,8 +170,68 @@ body {
   padding: 15px;
   color: #aaa;
   font-size: 12px;
-  max-height: 300px;
-  overflow-y: auto;
+}
+
+/* --- Log Panel Specifics --- */
+#logPanel .panel-content p {
+  margin: 0 0 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 5px;
+}
+#logPanel .panel-content p:last-child {
+  border-bottom: none;
+}
+
+/* --- Tab Styles --- */
+.tab-container {
+  display: flex;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 10px;
+  color: #666;
+  cursor: pointer;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+.tab-btn.active {
+  color: white;
+  border-bottom: 2px solid var(--accent-color);
+}
+.tab-content {
+  display: block;
+}
+.tab-content.hidden {
+  display: none;
+}
+
+/* --- Improved Rarity List Styles --- */
+#rarityList div,
+#chanceList div {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+.rarity-common {
+  color: var(--rarity-common);
+}
+.rarity-rare {
+  color: var(--rarity-rare);
+}
+.rarity-epic {
+  color: var(--rarity-epic);
+}
+.rarity-legendary {
+  color: var(--rarity-legendary);
+}
+.rarity-mythic {
+  color: var(--rarity-mythic);
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(231, 76, 60, 0.5);
 }
 
 /* --- Inputs in Panels --- */
@@ -202,7 +268,30 @@ input[type="text"] {
   margin-top: 10px;
 }
 
-/* --- OMEGA Panel --- */
+/* --- Upgrade Button --- */
+.upgrade-btn {
+  background: rgba(142, 68, 173, 0.2);
+  border: 1px solid var(--accent-color);
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s;
+  text-align: center;
+  font-size: 14px;
+}
+.upgrade-btn:hover {
+  background: rgba(142, 68, 173, 0.4);
+}
+.upgrade-btn:disabled {
+  background: #333;
+  border-color: #555;
+  color: #777;
+  cursor: not-allowed;
+}
+
+/* --- OMEGA Panel (Leaderboard & Admin) --- */
 .omega-panel {
   position: fixed;
   top: 50%;

@@ -4,11 +4,22 @@ const canvasWrapper = document.getElementById("canvasWrapper");
 
 // --- GAME STATE & SAVING ---
 let username = localStorage.getItem("omegaUsername");
+
+// --- DATA PERSISTENCE: Load state safely ---
 let gameState = JSON.parse(localStorage.getItem("omegaGameState")) || {
   score: 0,
   level: 1,
-  foundSecrets: new Array(20).fill(false),
+  foundSecrets: new Array(25).fill(false),
+  autoClickerLevel: 0,
+  prestigeLevel: 0,
 };
+
+// --- DATA PERSISTENCE: Ensure new fields exist in old saves ---
+if (gameState.prestigeLevel === undefined) gameState.prestigeLevel = 0;
+if (gameState.autoClickerLevel === undefined) gameState.autoClickerLevel = 0;
+if (gameState.foundSecrets === undefined)
+  gameState.foundSecrets = new Array(25).fill(false);
+while (gameState.foundSecrets.length < 25) gameState.foundSecrets.push(false);
 
 let elements = [],
   particles = [],
@@ -16,7 +27,10 @@ let elements = [],
 let menuOpen = false;
 let currentInput = "";
 let secretKeyPhrase = "omega";
-let spawnInterval;
+// --- ADMIN CODE ---
+let adminCodeInput = "";
+let adminCode = "639035"; // The secret code
+let spawnInterval, autoClickerInterval;
 
 // DOM Elements
 const scoreEl = document.getElementById("score");
@@ -26,27 +40,60 @@ const secretsFoundEl = document.getElementById("secretsFound");
 // Config
 let config = { maxElements: 40, spawnRate: 1000 };
 
-// --- EMOJI LIBRARY ---
+// --- EMOJI LIBRARY (UPDATED - 38 Emojis + Mythic) ---
 const emojiLibrary = [
-  { char: "👻", r: 0.6 },
-  { char: "💥", r: 0.6 },
-  { char: "👾", r: 0.6 },
-  { char: "🤖", r: 0.6 },
-  { char: "💩", r: 0.6 },
-  { char: "🤡", r: 0.6 },
-  { char: "🔥", r: 0.6 },
-  { char: "🛸", r: 0.6 },
-  { char: "🚀", r: 0.6 },
-  { char: "🥑", r: 0.6 },
-  { char: "💀", r: 0.6 },
-  { char: "🌪️", r: 0.6 },
-  { char: "👑", r: 0.25 },
-  { char: "💎", r: 0.25 },
-  { char: "🦊", r: 0.25 },
-  { char: "🍕", r: 0.25 },
-  { char: "🎸", r: 0.25 },
-  { char: "👽", r: 0.25 },
+  // Original (18)
+  { char: "👻", r: "Common" },
+  { char: "💥", r: "Common" },
+  { char: "👾", r: "Common" },
+  { char: "🤖", r: "Common" },
+  { char: "💩", r: "Common" },
+  { char: "🤡", r: "Common" },
+  { char: "🔥", r: "Common" },
+  { char: "🛸", r: "Common" },
+  { char: "🚀", r: "Common" },
+  { char: "🥑", r: "Common" },
+  { char: "💀", r: "Common" },
+  { char: "🌪️", r: "Common" },
+  { char: "👑", r: "Rare" },
+  { char: "💎", r: "Rare" },
+  { char: "🦊", r: "Rare" },
+  { char: "🍕", r: "Rare" },
+  { char: "🎸", r: "Rare" },
+  { char: "👽", r: "Rare" },
+  // Version 2.0 (10)
+  { char: "🌟", r: "Epic" },
+  { char: "🐙", r: "Epic" },
+  { char: "🌋", r: "Epic" },
+  { char: "🧩", r: "Epic" },
+  { char: "🐉", r: "Legendary" },
+  { char: "⚡", r: "Rare" },
+  { char: "🍩", r: "Common" },
+  { char: "🛡️", r: "Rare" },
+  { char: "🔮", r: "Epic" },
+  { char: "🌌", r: "Legendary" },
+  // Version 2.1 (10)
+  { char: "💎", r: "Legendary" }, // Re-defined rarity
+  { char: "🛡️", r: "Epic" }, // Re-defined rarity
+  { char: "☠️", r: "Rare" },
+  { char: "🎃", r: "Common" },
+  { char: "🍄", r: "Common" },
+  { char: "🦄", r: "Legendary" },
+  { char: "🌋", r: "Legendary" }, // Re-defined
+  { char: "🌈", r: "Epic" },
+  { char: "☄️", r: "Mythic" },
+  { char: "⚛️", r: "Mythic" },
 ];
+
+// Rarity Order & Chances
+const rarityOrder = ["Common", "Rare", "Epic", "Legendary", "Mythic"];
+const rarityChances = {
+  Common: "60%",
+  Rare: "25%",
+  Epic: "10%",
+  Legendary: "4.5%",
+  Mythic: "0.5%",
+};
 
 function getRandomEmoji() {
   return emojiLibrary[Math.floor(Math.random() * emojiLibrary.length)].char;
@@ -74,6 +121,11 @@ const secretsTable = [
   { id: 17, title: "Architect", clue: "Pushing the limits." },
   { id: 18, title: "Procrastinator", clue: "A moment of stillness." },
   { id: 19, title: "OMEGA", clue: "The final word." },
+  { id: 20, title: "Bling", clue: "Click the shiny objects." },
+  { id: 21, title: "Hacker", clue: "Type the numbers." },
+  { id: 22, title: "Prestige Master", clue: "Reset for power." },
+  { id: 23, title: "Unstoppable", clue: "Reach level 10." },
+  { id: 24, title: "Clean Slate", clue: "Admin power." },
 ];
 
 // --- INITIALIZATION & USERNAME ---
@@ -90,6 +142,11 @@ function init() {
   let foundCount = gameState.foundSecrets.filter((s) => s).length;
   secretsFoundEl.innerText = foundCount;
   spawnInterval = setInterval(spawnElement, config.spawnRate);
+
+  // --- INIT AUTO CLICKER ---
+  updateAutoClickerDisplay();
+  startAutoClicker();
+
   draw();
 }
 
@@ -142,7 +199,6 @@ document.getElementById("menuToggle").addEventListener("click", () => {
   menuOpen = !menuOpen;
   document.getElementById("sidebar").classList.toggle("closed");
 
-  // --- BLUR, FREEZE, AND SPAWN MECHANICS ---
   if (menuOpen) {
     canvasWrapper.classList.add("blurred");
     clearInterval(spawnInterval); // Stop spawning
@@ -169,8 +225,15 @@ document
   .getElementById("leaderboardBtn")
   .addEventListener("click", toggleOmegaLeaderboard);
 document
+  .getElementById("rarityBtn")
+  .addEventListener("click", toggleRarityPanel);
+document
   .getElementById("secretsBtn")
   .addEventListener("click", toggleSecretsPanel);
+document.getElementById("logBtn").addEventListener("click", toggleLogPanel);
+document
+  .getElementById("upgradesBtn")
+  .addEventListener("click", () => togglePanel("upgradesPanel"));
 document
   .getElementById("accountBtn")
   .addEventListener("click", () => togglePanel("accountPanel"));
@@ -188,7 +251,15 @@ document
 
 // Helper to toggle specific panels and close others
 function togglePanel(panelId) {
-  const panels = ["infoPanel", "settingsPanel", "secretsPanel", "accountPanel"];
+  const panels = [
+    "infoPanel",
+    "settingsPanel",
+    "secretsPanel",
+    "accountPanel",
+    "upgradesPanel",
+    "rarityPanel",
+    "logPanel",
+  ];
   panels.forEach((id) => {
     if (id === panelId) document.getElementById(id).classList.toggle("hidden");
     else document.getElementById(id).classList.add("hidden");
@@ -198,6 +269,17 @@ function togglePanel(panelId) {
 function toggleSecretsPanel() {
   togglePanel("secretsPanel");
   renderSecretsList();
+}
+
+function toggleRarityPanel() {
+  togglePanel("rarityPanel");
+  renderRarityList();
+  // Default to first tab
+  openTab(null, "rarityList");
+}
+
+function toggleLogPanel() {
+  togglePanel("logPanel");
 }
 
 function renderSecretsList() {
@@ -213,6 +295,150 @@ function renderSecretsList() {
     `,
     )
     .join("");
+}
+
+// Improved Rarity Panel Rendering
+function renderRarityList() {
+  const rarityListEl = document.getElementById("rarityList");
+  const chanceListEl = document.getElementById("chanceList");
+
+  // Sort emojis by rarity order
+  let sortedEmojis = [...emojiLibrary].sort((a, b) => {
+    return rarityOrder.indexOf(a.r) - rarityOrder.indexOf(b.r);
+  });
+
+  rarityListEl.innerHTML = sortedEmojis
+    .map(
+      (e) => `
+        <div class="rarity-${e.r.toLowerCase()}">
+            <span>${e.char}</span>
+            <span>${e.r}</span>
+        </div>
+    `,
+    )
+    .join("");
+
+  chanceListEl.innerHTML = rarityOrder
+    .map(
+      (r) => `
+        <div class="rarity-${r.toLowerCase()}">
+            <span>${r}</span>
+            <span>${rarityChances[r]}</span>
+        </div>
+    `,
+    )
+    .join("");
+}
+
+// Tab Switching Logic
+function openTab(evt, tabName) {
+  let i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tab-content");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].classList.add("hidden");
+  }
+  tablinks = document.getElementsByClassName("tab-btn");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].classList.remove("active");
+  }
+  document.getElementById(tabName).classList.remove("hidden");
+  if (evt) evt.currentTarget.classList.add("active");
+  else document.querySelector(".tab-btn").classList.add("active");
+}
+
+// --- UPGRADE LOGIC ---
+document
+  .getElementById("autoClickerBtn")
+  .addEventListener("click", buyAutoClicker);
+document.getElementById("prestigeBtn").addEventListener("click", prestige);
+
+function updateAutoClickerDisplay() {
+  let cost = Math.floor(
+    50 *
+      Math.pow(1.5, gameState.autoClickerLevel) *
+      Math.pow(0.8, gameState.prestigeLevel),
+  );
+  let timeReduction = 0.3 + gameState.prestigeLevel * 0.1;
+  let speed = Math.max(
+    0.5,
+    10 - gameState.autoClickerLevel * timeReduction,
+  ).toFixed(1);
+
+  document.getElementById("autoClickerCost").innerText = cost;
+  document.getElementById("autoClickerSpeed").innerText = speed;
+
+  document.getElementById("autoClickerBtn").disabled = gameState.score < cost;
+
+  if (gameState.autoClickerLevel >= 20) {
+    document.getElementById("prestigeBtn").classList.remove("hidden");
+  } else {
+    document.getElementById("prestigeBtn").classList.add("hidden");
+  }
+}
+
+function buyAutoClicker() {
+  let cost = Math.floor(
+    50 *
+      Math.pow(1.5, gameState.autoClickerLevel) *
+      Math.pow(0.8, gameState.prestigeLevel),
+  );
+  if (gameState.score >= cost) {
+    gameState.score -= cost;
+    gameState.autoClickerLevel++;
+    scoreEl.innerText = gameState.score;
+    saveGame();
+    updateAutoClickerDisplay();
+    startAutoClicker();
+    triggerSecret(9); // Collector
+  }
+}
+
+function startAutoClicker() {
+  if (gameState.autoClickerLevel === 0) return;
+
+  clearInterval(autoClickerInterval);
+  let timeReduction = 0.3 + gameState.prestigeLevel * 0.1;
+  let speedMs = Math.max(
+    500,
+    (10 - gameState.autoClickerLevel * timeReduction) * 1000,
+  );
+
+  autoClickerInterval = setInterval(() => {
+    if (elements.length > 0) {
+      let el = elements[0];
+      createParticles(el.x + el.size / 2, el.y + el.size / 2, el.color);
+      elements.splice(0, 1);
+      gameState.score += 10;
+      scoreEl.innerText = gameState.score;
+      saveGame();
+      updateAutoClickerDisplay();
+
+      if (gameState.score >= nextLevelScore) {
+        gameState.level++;
+        levelEl.innerText = gameState.level;
+        nextLevelScore += 100 * gameState.level;
+      }
+    }
+  }, speedMs);
+}
+
+// --- PRESTIGE LOGIC ---
+function prestige() {
+  if (gameState.autoClickerLevel < 20) return;
+
+  if (
+    confirm(
+      "Prestige? This will reset your Auto Clicker level, but make future upgrades cheaper and faster!",
+    )
+  ) {
+    gameState.autoClickerLevel = 0;
+    gameState.prestigeLevel++;
+    saveGame();
+    updateAutoClickerDisplay();
+    startAutoClicker();
+    triggerSecret(22); // Prestige Master
+    alert(`Prestige Level ${gameState.prestigeLevel} achieved!`);
+  }
 }
 
 // Settings Functionality
@@ -298,7 +524,6 @@ function draw() {
 
 // --- Clicking & Secrets ---
 canvas.addEventListener("mousedown", (e) => {
-  // If menu is open, don't allow clicks on canvas
   if (menuOpen) return;
 
   const rect = canvas.getBoundingClientRect();
@@ -317,6 +542,7 @@ canvas.addEventListener("mousedown", (e) => {
       createParticles(el.x + el.size / 2, el.y + el.size / 2, el.color);
 
       if (el.char === "👻") triggerSecret(14);
+      if (el.char === "💎") triggerSecret(20);
 
       elements.splice(i, 1);
       gameState.score += 10;
@@ -324,27 +550,37 @@ canvas.addEventListener("mousedown", (e) => {
       triggerSecret(3);
       saveGame();
 
-      // Level up logic
       if (gameState.score >= nextLevelScore) {
         gameState.level++;
         levelEl.innerText = gameState.level;
         nextLevelScore += 100 * gameState.level;
         if (gameState.level >= 2) triggerSecret(4);
+        if (gameState.level >= 10) triggerSecret(23);
       }
       break;
     }
   }
 });
 
-// Secret Key Input
+// --- KEY INPUTS (Secrets & Codes) ---
 window.addEventListener("keydown", (e) => {
+  // --- OMEGA SECRET - NOW JUST SHOWS BUTTON ---
   currentInput += e.key.toLowerCase();
   if (currentInput.includes(secretKeyPhrase)) {
-    triggerSecret(19); // OMEGA secret
+    triggerSecret(19);
     currentInput = "";
     document.getElementById("unlockOmega").classList.remove("hidden");
   }
   if (currentInput.length > 20) currentInput = "";
+
+  // --- ADMIN CODE ---
+  adminCodeInput += e.key;
+  if (adminCodeInput.includes(adminCode)) {
+    triggerSecret(21);
+    togglePanelDisplay("adminPanel"); // Opens Admin Panel
+    adminCodeInput = "";
+  }
+  if (adminCodeInput.length > 10) adminCodeInput = "";
 });
 
 function triggerSecret(index) {
@@ -353,7 +589,26 @@ function triggerSecret(index) {
   let foundCount = gameState.foundSecrets.filter((s) => s).length;
   secretsFoundEl.innerText = foundCount;
   saveGame();
-  if (foundCount >= 20) alert("ALL SECRETS FOUND!");
+  if (foundCount >= 25) alert("ALL SECRETS FOUND!");
+}
+
+// --- Panels Display Management ---
+function togglePanelDisplay(panelId) {
+  const panel = document.getElementById(panelId);
+  panel.classList.toggle("hidden");
+  setTimeout(() => panel.classList.toggle("active"), 10);
+  // Hide unlock button if we opened the menu
+  if (panelId === "omegaPanel")
+    document.getElementById("unlockOmega").classList.add("hidden");
+}
+
+function closePanel(id) {
+  const panel = document.getElementById(id);
+  panel.classList.remove("active");
+  setTimeout(() => panel.classList.add("hidden"), 500);
+  // If closing omega menu, hide button just in case
+  if (id === "omegaPanel")
+    document.getElementById("unlockOmega").classList.add("hidden");
 }
 
 // --- Leaderboard ---
@@ -364,38 +619,86 @@ function toggleOmegaLeaderboard() {
   setTimeout(() => panel.classList.toggle("active"), 10);
   triggerSecret(5);
 }
+
+// --- OMEGA Panel Features ---
+function megaExplosion() {
+  elements.forEach((el) => createParticles(el.x, el.y, el.color));
+  elements = [];
+  triggerSecret(24);
+}
+
+function spawnMaxElements() {
+  for (let i = 0; i < config.maxElements; i++) {
+    spawnElement();
+  }
+}
+
+// --- ADMIN PANEL FUNCTIONS ---
+function adminSetScore() {
+  let input = document.getElementById("adminScoreInput").value;
+  let newScore = parseInt(input);
+  if (!isNaN(newScore)) {
+    gameState.score = newScore;
+    scoreEl.innerText = gameState.score;
+    saveGame();
+    updateAutoClickerDisplay();
+    alert(`Score set to ${newScore}`);
+  }
+}
+function adminSetLevel() {
+  let input = document.getElementById("adminLevelInput").value;
+  let newLevel = parseInt(input);
+  if (!isNaN(newLevel) && newLevel > 0) {
+    gameState.level = newLevel;
+    levelEl.innerText = gameState.level;
+    saveGame();
+    alert(`Level set to ${newLevel}`);
+  }
+}
+function adminSetAutoClicker() {
+  let input = document.getElementById("adminAutoClickerInput").value;
+  let newLvl = parseInt(input);
+  if (!isNaN(newLvl) && newLvl >= 0) {
+    gameState.autoClickerLevel = newLvl;
+    saveGame();
+    updateAutoClickerDisplay();
+    startAutoClicker();
+    alert(`Auto Clicker Level set to ${newLvl}`);
+  }
+}
+function adminSetPrestige() {
+  let input = document.getElementById("adminPrestigeInput").value;
+  let newLvl = parseInt(input);
+  if (!isNaN(newLvl) && newLvl >= 0) {
+    gameState.prestigeLevel = newLvl;
+    saveGame();
+    updateAutoClickerDisplay();
+    startAutoClicker();
+    alert(`Prestige Level set to ${newLvl}`);
+  }
+}
+
 function renderLeaderboard() {
   const list = document.getElementById("omegaLeaderboardList");
-  // Saving top 5 scores with usernames
   let highScores = JSON.parse(localStorage.getItem("omegaHighScores")) || [];
-
-  // Filter to ensure only valid data
   highScores = highScores.filter(
     (s) => s && s.user && typeof s.score === "number",
   );
-
-  // Update or Add current score
-  let existingScore = highScores.find((s) => s.user === username);
-  if (existingScore) {
-    if (gameState.score > existingScore.score)
-      existingScore.score = gameState.score;
+  let existingScoreIndex = highScores.findIndex((s) => s.user === username);
+  if (existingScoreIndex !== -1) {
+    if (gameState.score > highScores[existingScoreIndex].score) {
+      highScores[existingScoreIndex].score = gameState.score;
+    }
   } else if (username) {
     highScores.push({ user: username, score: gameState.score });
   }
-
   highScores.sort((a, b) => b.score - a.score);
   highScores = highScores.slice(0, 5);
   localStorage.setItem("omegaHighScores", JSON.stringify(highScores));
-
   list.innerHTML =
     highScores.length === 0
       ? "<li>No scores yet...</li>"
       : highScores.map((s) => `<li>${s.user}: ${s.score}</li>`).join("");
-}
-function closePanel(id) {
-  const panel = document.getElementById(id);
-  panel.classList.remove("active");
-  setTimeout(() => panel.classList.add("hidden"), 500);
 }
 
 init();
